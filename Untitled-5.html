@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sopa de Letras - Natación Artística</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      background: #f5f7fb;
+    }
+
+    .wordsearch-container {
+      max-width: 900px;
+      margin: 20px auto;
+    }
+
+    .wordsearch-table {
+      border-collapse: collapse;
+      margin: 0 auto;
+      touch-action: none; /* importante para móvil */
+    }
+
+    .wordsearch-table td {
+      border: 1px solid #dee2e6;
+      width: 2.2rem;
+      height: 2.2rem;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 600;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      touch-action: none; /* evita scroll accidental al arrastrar */
+    }
+
+    .word-cell-selected {
+      background-color: #cfe2ff;
+    }
+
+    .word-cell-found {
+      background-color: #198754;
+      color: #fff;
+    }
+
+    .word-list-item {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      margin: 0.15rem;
+      border-radius: 999px;
+      background-color: #e9ecef;
+      font-size: 0.9rem;
+    }
+
+    .word-list-item.found {
+      background-color: #198754;
+      color: #fff;
+      text-decoration: line-through;
+    }
+
+    @media (max-width: 576px) {
+      .wordsearch-table td {
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container wordsearch-container">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h3 text-center mb-3">Natación Artística</h1>
+        <p class="text-center text-muted">
+          Sopa de letras interactiva – Encuentra todas las palabras relacionadas con la natación artística.
+        </p>
+
+        <div class="mb-3">
+          <label for="studentName" class="form-label">
+            Nombre del estudiante que lo está registrando:
+          </label>
+          <input
+            type="text"
+            id="studentName"
+            class="form-control"
+            placeholder="Escribe tu nombre aquí"
+          />
+        </div>
+
+        <div class="row g-4">
+          <div class="col-12 col-md-8">
+            <div class="table-responsive">
+              <table class="wordsearch-table" id="wordsearchGrid"></table>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <h5 class="mb-2">Palabras a encontrar</h5>
+            <p class="text-muted mb-1" style="font-size: 0.9rem;">
+              A medida que las encuentres en la sopa de letras, se marcarán aquí abajo.
+            </p>
+            <div id="wordList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Felicidades -->
+  <div
+    class="modal fade"
+    id="congratsModal"
+    tabindex="-1"
+    aria-labelledby="congratsModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg border-0">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="congratsModalLabel">¡Felicidades!</h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body text-center py-4">
+          <h4 id="congratsMessage" class="mb-3"></h4>
+          <p class="mb-0">
+            Has encontrado todas las palabras de la sopa de letras de Natación Artística.
+          </p>
+          <p class="fs-2 mt-3 mb-0">¡Siuuuuuuu! 🎉⚽💦</p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button
+            type="button"
+            class="btn btn-success"
+            data-bs-dismiss="modal"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // === CONFIGURACIÓN DE LA SOPA DE LETRAS ===
+
+    const gridData = [
+      "GICOREOGRAFIAA",
+      "EXNEMZQJCGAEIC",
+      "MCDPDABIXHWNRA",
+      "EDAICONPMPOOAD",
+      "ZQYIPCXJCRNIEA",
+      "OKSIEIUICJCILR",
+      "ZUUTRWKNGNUDIP",
+      "MQIXFUIYEORUBD",
+      "EOTBDSTTFFCORB",
+      "UERGOMSIOBHUEQ",
+      "AGUACICNNGAAPH",
+      "YMYASMHFWAOKUN",
+      "XYREMDBUSESBOI",
+      "EXROUJZQEDEHSH"
+    ];
+
+    const words = [
+      {
+        key: "SINCRONIA",
+        display: "Sincronía",
+        positions: [
+          { row: 8, col: 5 },
+          { row: 7, col: 6 },
+          { row: 6, col: 7 },
+          { row: 5, col: 8 },
+          { row: 4, col: 9 },
+          { row: 3, col: 10 },
+          { row: 2, col: 11 },
+          { row: 1, col: 12 },
+          { row: 0, col: 13 }
+        ],
+        found: false
+      },
+      {
+        key: "MUSICA",
+        display: "Música",
+        positions: [
+          { row: 7, col: 0 },
+          { row: 6, col: 1 },
+          { row: 5, col: 2 },
+          { row: 4, col: 3 },
+          { row: 3, col: 4 },
+          { row: 2, col: 5 }
+        ],
+        found: false
+      },
+      {
+        key: "RUTINA",
+        display: "Rutina",
+        positions: [
+          { row: 6, col: 4 },
+          { row: 7, col: 5 },
+          { row: 8, col: 6 },
+          { row: 9, col: 7 },
+          { row: 10, col: 8 },
+          { row: 11, col: 9 }
+        ],
+        found: false
+      },
+      {
+        key: "EQUIPO",
+        display: "Equipo",
+        positions: [
+          { row: 8, col: 0 },
+          { row: 7, col: 1 },
+          { row: 6, col: 2 },
+          { row: 5, col: 3 },
+          { row: 4, col: 4 },
+          { row: 3, col: 5 }
+        ],
+        found: false
+      },
+      {
+        key: "DUO",
+        display: "Dúo",
+        positions: [
+          { row: 6, col: 11 },
+          { row: 7, col: 11 },
+          { row: 8, col: 11 }
+        ],
+        found: false
+      },
+      {
+        key: "LIBRE",
+        display: "Libre",
+        positions: [
+          { row: 5, col: 12 },
+          { row: 6, col: 12 },
+          { row: 7, col: 12 },
+          { row: 8, col: 12 },
+          { row: 9, col: 12 }
+        ],
+        found: false
+      },
+      {
+        key: "TECNICA",
+        display: "Técnica",
+        positions: [
+          { row: 6, col: 3 },
+          { row: 5, col: 4 },
+          { row: 4, col: 5 },
+          { row: 3, col: 6 },
+          { row: 2, col: 7 },
+          { row: 1, col: 8 },
+          { row: 0, col: 9 }
+        ],
+        found: false
+      },
+      {
+        key: "RESISTENCIA",
+        display: "Resistencia",
+        positions: [
+          { row: 13, col: 2 },
+          { row: 12, col: 3 },
+          { row: 11, col: 4 },
+          { row: 10, col: 5 },
+          { row: 9, col: 6 },
+          { row: 8, col: 7 },
+          { row: 7, col: 8 },
+          { row: 6, col: 9 },
+          { row: 5, col: 10 },
+          { row: 4, col: 11 },
+          { row: 3, col: 12 }
+        ],
+        found: false
+      },
+      {
+        key: "COREOGRAFIA",
+        display: "Coreografía",
+        positions: [
+          { row: 0, col: 2 },
+          { row: 0, col: 3 },
+          { row: 0, col: 4 },
+          { row: 0, col: 5 },
+          { row: 0, col: 6 },
+          { row: 0, col: 7 },
+          { row: 0, col: 8 },
+          { row: 0, col: 9 },
+          { row: 0, col: 10 },
+          { row: 0, col: 11 },
+          { row: 0, col: 12 }
+        ],
+        found: false
+      },
+      {
+        key: "AGUA",
+        display: "Agua",
+        positions: [
+          { row: 10, col: 0 },
+          { row: 10, col: 1 },
+          { row: 10, col: 2 },
+          { row: 10, col: 3 }
+        ],
+        found: false
+      }
+    ];
+
+    const gridElement = document.getElementById("wordsearchGrid");
+    const wordListElement = document.getElementById("wordList");
+    const studentNameInput = document.getElementById("studentName");
+
+    let isSelecting = false;
+    let selectionCells = [];
+    let selectionCoords = [];
+    let startRow = null;
+    let startCol = null;
+    let direction = null; // {dr, dc}
+    let activePointerId = null;
+
+    const cellMap = {};
+
+    function renderGrid() {
+      gridElement.innerHTML = "";
+      for (let r = 0; r < gridData.length; r++) {
+        const tr = document.createElement("tr");
+        for (let c = 0; c < gridData[r].length; c++) {
+          const td = document.createElement("td");
+          td.textContent = gridData[r][c];
+          td.dataset.row = r;
+          td.dataset.col = c;
+          td.classList.add("word-cell");
+          const cellId = `cell-${r}-${c}`;
+          td.id = cellId;
+          cellMap[cellId] = td;
+
+          td.addEventListener("pointerdown", handlePointerDown);
+          tr.appendChild(td);
+        }
+        gridElement.appendChild(tr);
+      }
+
+      // Eventos globales para seguir el dedo / mouse
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", handlePointerUp);
+      document.addEventListener("pointercancel", handlePointerUp);
+    }
+
+    function renderWordList() {
+      wordListElement.innerHTML = "";
+      words.forEach((word, index) => {
+        const span = document.createElement("span");
+        span.textContent = word.display;
+        span.classList.add("word-list-item");
+        span.id = `word-item-${index}`;
+        wordListElement.appendChild(span);
+      });
+    }
+
+    function handlePointerDown(e) {
+      e.preventDefault();
+      const cell = e.currentTarget;
+      const row = parseInt(cell.dataset.row, 10);
+      const col = parseInt(cell.dataset.col, 10);
+
+      isSelecting = true;
+      activePointerId = e.pointerId;
+      selectionCells = [cell];
+      selectionCoords = [{ row, col }];
+      startRow = row;
+      startCol = col;
+      direction = null;
+
+      cell.classList.add("word-cell-selected");
+    }
+
+    function handlePointerMove(e) {
+      if (!isSelecting || e.pointerId !== activePointerId) return;
+
+      const elem = document.elementFromPoint(e.clientX, e.clientY);
+      if (!elem) return;
+
+      if (elem.matches("td.word-cell")) {
+        handleCellOver(elem);
+      }
+    }
+
+    function handleCellOver(cell) {
+      const row = parseInt(cell.dataset.row, 10);
+      const col = parseInt(cell.dataset.col, 10);
+
+      if (selectionCoords.some(c => c.row === row && c.col === col)) {
+        return;
+      }
+
+      const last = selectionCoords[selectionCoords.length - 1];
+
+      if (!direction) {
+        const dr = row - startRow;
+        const dc = col - startCol;
+        if (dr === 0 && dc === 0) return;
+
+        const normDr = Math.sign(dr);
+        const normDc = Math.sign(dc);
+
+        // Permitimos solo líneas rectas (horiz, vert, diagonal)
+        if (
+          !(
+            (normDr === 0 && normDc !== 0) ||
+            (normDr !== 0 && normDc === 0) ||
+            (normDr !== 0 && normDc !== 0)
+          )
+        ) {
+          return;
+        }
+        direction = { dr: normDr, dc: normDc };
+      }
+
+      const expectedRow = last.row + direction.dr;
+      const expectedCol = last.col + direction.dc;
+
+      if (row === expectedRow && col === expectedCol) {
+        selectionCells.push(cell);
+        selectionCoords.push({ row, col });
+        cell.classList.add("word-cell-selected");
+      }
+    }
+
+    function handlePointerUp(e) {
+      if (!isSelecting || (activePointerId !== null && e.pointerId !== activePointerId)) {
+        // en algunos navegadores pointerup sin pointerId coincide, igual cerramos selección
+      }
+
+      if (!isSelecting) return;
+
+      checkSelection();
+
+      selectionCells.forEach(cell => {
+        if (!cell.classList.contains("word-cell-found")) {
+          cell.classList.remove("word-cell-selected");
+        }
+      });
+
+      isSelecting = false;
+      activePointerId = null;
+      selectionCells = [];
+      selectionCoords = [];
+      startRow = null;
+      startCol = null;
+      direction = null;
+    }
+
+    function coordsEqual(a, b) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i].row !== b[i].row || a[i].col !== b[i].col) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function reversedCoords(coords) {
+      return [...coords].reverse();
+    }
+
+    function checkSelection() {
+      if (selectionCoords.length === 0) return;
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        if (word.found) continue;
+
+        const forward = word.positions;
+        const backward = reversedCoords(word.positions);
+
+        if (
+          coordsEqual(selectionCoords, forward) ||
+          coordsEqual(selectionCoords, backward)
+        ) {
+          word.found = true;
+          markWordFound(word, i);
+          break;
+        }
+      }
+
+      if (words.every(w => w.found)) {
+        showCongratsModal();
+      }
+    }
+
+    function markWordFound(word, index) {
+      word.positions.forEach(pos => {
+        const id = `cell-${pos.row}-${pos.col}`;
+        const cell = cellMap[id];
+        if (cell) {
+          cell.classList.remove("word-cell-selected");
+          cell.classList.add("word-cell-found");
+        }
+      });
+
+      const item = document.getElementById(`word-item-${index}`);
+      if (item) {
+        item.classList.add("found");
+      }
+    }
+
+    function showCongratsModal() {
+      const name = studentNameInput.value.trim() || "estudiante";
+      const msg = `¡Felicidades, ${name}!`;
+      const msgElement = document.getElementById("congratsMessage");
+      msgElement.textContent = msg;
+
+      const modalElement = document.getElementById("congratsModal");
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    }
+
+    renderGrid();
+    renderWordList();
+  </script>
+</body>
+</html>
